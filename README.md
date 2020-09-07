@@ -8,14 +8,18 @@
 三、编译指令
 
 mkdir -p ~/catkin_ws/src
+
 cp -r cloud_registration ~/catkin_ws/src
+
 cd catkin_ws
+
 catkin_make -j4
 
 四、执行
 
 也可以做一个launch文件，但既然全程没有使用ROS,这里也就没有使用launch文件。
 cd ~/catkin_ws/devel/lib/cloud_registration
+
 ./test_pcd ~/catkin/src/cloud_registration/pcd/cloud_002.pcd ~/catkin/src/cloud_registration/pcd/cloud_003.pcd
 
 会在终端输出T和耗时。
