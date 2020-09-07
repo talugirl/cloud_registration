@@ -21,7 +21,7 @@ catkin_make -j4
 
 cd ~/catkin_ws/devel/lib/cloud_registration
 
-./test_pcd ~/catkin/src/cloud_registration/pcd/cloud_002.pcd ~/catkin/src/cloud_registration/pcd/cloud_003.pcd
+./test_pcd ~/catkin_ws/src/cloud_registration/pcd/cloud_002.pcd ~/catkin_ws/src/cloud_registration/pcd/cloud_003.pcd
 
 会在终端输出T和耗时。
 在~/catkin/src/cloud_registration/pcd文件夹下生成两个新的pcd文件。
