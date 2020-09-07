@@ -18,6 +18,7 @@ catkin_make -j4
 四、执行
 
 也可以做一个launch文件，但既然全程没有使用ROS,这里也就没有使用launch文件。
+
 cd ~/catkin_ws/devel/lib/cloud_registration
 
 ./test_pcd ~/catkin/src/cloud_registration/pcd/cloud_002.pcd ~/catkin/src/cloud_registration/pcd/cloud_003.pcd
