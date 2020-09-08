@@ -25,20 +25,25 @@ void processPcd(string pcdfile1, string pcdfile2) {
         printf("have empty cloud, please check \n");
         return;
     }
-
-    pcl::PointCloud<pcl::PointNormal>::Ptr src(new pcl::PointCloud<pcl::PointNormal>);
-    pcl::copyPointCloud(*cloud1, *src);
-    pcl::PointCloud<pcl::PointNormal>::Ptr tgt(new pcl::PointCloud<pcl::PointNormal>);
-    pcl::copyPointCloud(*cloud2, *tgt);
-
-    pcl::NormalEstimation<pcl::PointNormal, pcl::PointNormal> norm_est;
-    norm_est.setSearchMethod(pcl::search::KdTree<pcl::PointNormal>::Ptr(new pcl::search::KdTree<pcl::PointNormal>));
+    outlierFilter<PointXYZI>(cloud1, 0.1, 2);
+    outlierFilter<PointXYZI>(cloud2, 0.1, 2);
+    PointCloud<PointNormal>::Ptr src(new PointCloud<PointNormal>);
+    copyPointCloud(*cloud1, *src);
+    PointCloud<PointNormal>::Ptr tgt(new PointCloud<PointNormal>);
+    copyPointCloud(*cloud2, *tgt);
+    voxelFilter<PointNormal>(src, 0.1);
+    voxelFilter<PointNormal>(tgt, 0.1);
+    randomFilter<PointNormal>(src, 400);
+    randomFilter<PointNormal>(tgt, 400);
+    start = clock();
+    NormalEstimation<PointNormal, PointNormal> norm_est;
+    norm_est.setSearchMethod(search::KdTree<PointNormal>::Ptr(new search::KdTree<PointNormal>));
     norm_est.setKSearch(40);
     norm_est.setInputCloud(tgt);
     norm_est.compute(*tgt);
 
-    pcl::IterativeClosestPoint<pcl::PointNormal, pcl::PointNormal> icp;
-    typedef pcl::registration::TransformationEstimationPointToPlane<pcl::PointNormal, pcl::PointNormal> PointToPlane;
+    IterativeClosestPoint<PointNormal, PointNormal> icp;
+    typedef registration::TransformationEstimationPointToPlane<PointNormal, PointNormal> PointToPlane;
     boost::shared_ptr<PointToPlane> point_to_plane(new PointToPlane);
     icp.setTransformationEstimation(point_to_plane); // key
 
@@ -47,18 +52,19 @@ void processPcd(string pcdfile1, string pcdfile2) {
 
     icp.setRANSACIterations(30);
     icp.setMaximumIterations(60);
-    icp.setTransformationEpsilon(1e-6);
-    icp.setMaxCorrespondenceDistance(0.2); //点对的最大距离超过0.1则忽略!!!!!!
-    pcl::PointCloud<pcl::PointNormal> output;
+    icp.setTransformationEpsilon(1e-5);
+    icp.setMaxCorrespondenceDistance(0.4); //点对的最大距离超过0.1则忽略!!!!!!
+    PointCloud<PointNormal> output;
     icp.align(output); // align 的另一个重载可以设置一个初始矩阵guess
     const Eigen::Matrix4f T = icp.getFinalTransformation();
     float fitnessScore = icp.getFitnessScore();
     cout << "T: " << endl;
     cout << T << endl;
     // cout << "fitnessScore " << fitnessScore << endl;
-    copyPointCloud(output, *cloud1);
-    outlierFilter<PointXYZI>(cloud1, 0.1, 2);
-    outlierFilter<PointXYZI>(cloud2, 0.1, 2);
+    finish = clock();
+    printf("icp time is %f sec\n", (finish - start) / CLOCKS_PER_SEC);
+    start = clock();
+    transformPointCloud(*cloud1, *cloud1, T);
     PointCloud<PointXYZRGB>::Ptr color_cloud1(new PointCloud<PointXYZRGB>),
     color_cloud2(new PointCloud<PointXYZRGB>);
     for (const auto& p : cloud1->points) {
@@ -81,8 +87,6 @@ void processPcd(string pcdfile1, string pcdfile2) {
     savePcd<PointXYZRGB>(s1 + "_new.pcd", *color_cloud1);
     string s2 = extractString(pcdfile2);
     savePcd<PointXYZRGB>(s2 + "_new.pcd", *color_cloud2);
-    finish = clock();
-    printf("process time is %f sec\n", (finish - start) / CLOCKS_PER_SEC);
     viewCompareCloud<PointXYZI>(cloud1, cloud2);
 }
 
